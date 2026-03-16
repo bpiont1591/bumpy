@@ -14,33 +14,43 @@ Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera
 
 ---
 
-## Architektura
-- `src/server.js` – API + serwowanie frontendu + security middleware.
-- `src/db.js` – SQLite (serwery, bump logi, sesje panelu).
-- `public/*` – frontend (`index.html`, `panel.html`, style, JS).
-- `bot/index.js` – bot Discord z komendą `/bump`.
+## Cloudflare Pages (bumpyv2.pages.dev) — gotowe
+Projekt jest przygotowany pod:
+- statyczny frontend w `public/`,
+- API w Cloudflare Pages Functions: `functions/api/[[path]].js`,
+- bazę danych Cloudflare D1 (binding `DB`).
 
----
-
-## 1) Uruchomienie strony (backend + frontend)
+### 1) Utwórz bazę D1
 ```bash
-npm install
-cp .env.example .env
-npm start
+wrangler d1 create bumpyv2-db
+```
+Skopiuj `database_id` do `wrangler.toml`.
+
+### 2) Uruchom migrację
+```bash
+npm run cf:d1:migrate
+```
+Lub ręcznie:
+```bash
+wrangler d1 execute bumpyv2-db --file=./migrations/001_init.sql
 ```
 
-API działa na `http://localhost:3000`.
+### 3) Ustaw sekrety w Cloudflare (Pages Project -> Settings -> Environment Variables)
+- `BUMP_API_KEY` (secret)
+- `PUBLIC_BASE_URL=https://bumpyv2.pages.dev`
 
-### Kluczowe endpointy
-- `POST /api/bump` – tylko dla bota (`x-bump-api-key`).
-- `GET /api/servers` – lista serwerów do wyświetlenia.
-- `POST /api/panel/session` – start sesji panelu.
-- `GET /api/panel/:guildId` – pobranie danych panelu (wymaga sesji).
-- `PUT /api/panel/:guildId` – zapis ustawień panelu (wymaga sesji).
+### 4) Deploy na Pages
+```bash
+npm run cf:deploy
+```
+
+Po deployu API będzie działać pod:
+- `https://bumpyv2.pages.dev/api/health`
+- `https://bumpyv2.pages.dev/api/servers`
 
 ---
 
-## 2) Uruchomienie bota (osobny hosting)
+## Bot (osobny hosting)
 W folderze `bot`:
 ```bash
 npm install
@@ -52,24 +62,25 @@ Przykładowy `.env` dla bota:
 ```env
 BOT_TOKEN=twoj_token_bota
 CLIENT_ID=application_id
-API_BASE_URL=https://twoja-domena-z-aplikacja.pl
-BUMP_API_KEY=ten_sam_klucz_co_w_backendzie
+API_BASE_URL=https://bumpyv2.pages.dev
+BUMP_API_KEY=ten_sam_klucz_co_w_cloudflare_secret
 ```
 
 Po wpisaniu `/bump invite:<link>` bot wysyła bump do API i zwraca adminowi link do panelu.
 
 ---
 
-## Cloudflare + security checklist
-1. Ustaw SSL/TLS na **Full (strict)**.
-2. Trzymaj `BUMP_API_KEY` i `SESSION_COOKIE_SECRET` w sekretach hostingu.
-3. Wyłącz cache dla `/api/*`, a dla statyk włącz cache.
-4. Ustaw `PUBLIC_BASE_URL` na domenę HTTPS.
-5. Aplikacja zawiera:
-   - `helmet` + CSP,
-   - HSTS w produkcji,
-   - cookie sesji panelu: `httpOnly`, `signed`, `sameSite=lax`, `secure` (prod),
-   - walidację invite/banner URL.
+## Lokalne uruchomienie (opcjonalne)
+- legacy Node backend: `npm start`
+- Cloudflare local dev: `npm run cf:dev`
+
+---
+
+## Security
+- API do bumpa chronione `x-bump-api-key`.
+- Sesje panelu trzymane w D1 + cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
+- Walidacja invite URL i banner URL.
+- Endpointy API mają `cache-control: no-store`.
 
 ---
 
