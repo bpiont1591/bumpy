@@ -1,0 +1,9 @@
+name = "bumpyv2"
+compatibility_date = "2026-03-16"
+pages_build_output_dir = "."
+
+# Bindingi zarządzane przez wrangler.toml
+[[d1_databases]]
+binding = "DB"
+database_name = "bumpyv2-db"
+database_id = "a4d2e0b5-1394-46eb-9944-9d953a73f222"
