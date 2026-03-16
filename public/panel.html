@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GuildLift Panel</title>
-  <meta name="description" content="Panel konfiguracji reklamy i ustawień serwera GuildLift." />
+  <title>NebulaNest Panel</title>
+  <meta name="description" content="Panel konfiguracji reklamy i ustawień serwera NebulaNest." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <main class="container panel-wrap">
-    <h1>Panel serwera</h1>
+    <p class="eyebrow">PANEL ADMINA SERWERA</p>
+    <h1>NebulaNest - ustawienia promocji</h1>
     <p id="panel-status" class="panel-status">Ładowanie danych...</p>
 
     <form id="panel-form" class="panel-form hidden">
@@ -23,12 +24,12 @@
 
       <label>
         Tytuł reklamy
-        <input name="adTitle" type="text" maxlength="120" placeholder="Np. Szukasz aktywnej społeczności gamingowej?" />
+        <input name="adTitle" type="text" maxlength="120" placeholder="Np. Wbij na aktywną społeczność gamingową" />
       </label>
 
       <label>
         Treść reklamy
-        <textarea name="adBody" rows="5" maxlength="900" placeholder="Krótki przekaz promocyjny z wyróżnikami serwera"></textarea>
+        <textarea name="adBody" rows="5" maxlength="900" placeholder="Krótki tekst reklamowy, który pojawi się na liście"></textarea>
       </label>
 
       <label>

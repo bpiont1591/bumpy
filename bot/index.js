@@ -15,7 +15,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const commands = [
   new SlashCommandBuilder()
     .setName('bump')
-    .setDescription('Wypromuj serwer na stronie GuildLift')
+    .setDescription('Wypromuj serwer na stronie NebulaNest')
     .addStringOption(opt =>
       opt.setName('invite')
         .setDescription('Link zaproszenia Discord')

@@ -1,24 +1,24 @@
-# GuildLift
+# NebulaNest
 
-Profesjonalna platforma typu "bump listing" dla serwerów Discord (od zera), inspirowana katalogami serwerów.
+Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera), inspirowana działaniem katalogów jak Discordzik, ale z własnym brandingiem i unikalnym wyglądem.
 
 ## Co dostajesz
 - Strona główna z listą serwerów bumpowanych komendą `/bump`.
-- Brak obsługi obcych botów listingowych — tylko serwery dodane przez Twojego bota.
+- Tylko serwery dodane przez Twojego bota (bez obcych integracji listingowych).
 - Osobny bot Discord (`/bot`) do hostowania na innym serwerze.
-- Panel serwera z bezpieczną sesją HTTP-only (bez stałego tokenu w query), w którym właściciel/administrator może:
-  - ustawić opis,
-  - dodać reklamę (tytuł + treść),
-  - podmienić invite,
-  - dodać banner.
+- Panel serwera z bezpieczną sesją HTTP-only, gdzie admin ustawia:
+  - opis,
+  - reklamę (tytuł + treść),
+  - link invite,
+  - banner.
 
 ---
 
 ## Architektura
-- `src/server.js` – API + serwowanie frontendu + walidacja bezpieczeństwa.
+- `src/server.js` – API + serwowanie frontendu + security middleware.
 - `src/db.js` – SQLite (serwery, bump logi, sesje panelu).
-- `public/*` – frontend (`index.html` + `panel.html`).
-- `bot/index.js` – bot Discord z komendą slash `/bump`.
+- `public/*` – frontend (`index.html`, `panel.html`, style, JS).
+- `bot/index.js` – bot Discord z komendą `/bump`.
 
 ---
 
@@ -32,10 +32,10 @@ npm start
 API działa na `http://localhost:3000`.
 
 ### Kluczowe endpointy
-- `POST /api/bump` – tylko dla bota (nagłówek `x-bump-api-key`).
+- `POST /api/bump` – tylko dla bota (`x-bump-api-key`).
 - `GET /api/servers` – lista serwerów do wyświetlenia.
-- `POST /api/panel/session` – uruchamia sesję panelu na podstawie jednorazowego tokenu.
-- `GET /api/panel/:guildId` – dane panelu (wymaga sesji).
+- `POST /api/panel/session` – start sesji panelu.
+- `GET /api/panel/:guildId` – pobranie danych panelu (wymaga sesji).
 - `PUT /api/panel/:guildId` – zapis ustawień panelu (wymaga sesji).
 
 ---
@@ -56,25 +56,25 @@ API_BASE_URL=https://twoja-domena-z-aplikacja.pl
 BUMP_API_KEY=ten_sam_klucz_co_w_backendzie
 ```
 
-Po wpisaniu `/bump invite:<link>` bot wyśle bump do API i odda użytkownikowi link do panelu serwera.
+Po wpisaniu `/bump invite:<link>` bot wysyła bump do API i zwraca adminowi link do panelu.
 
 ---
 
 ## Cloudflare + security checklist
-1. Ustaw w Cloudflare SSL/TLS na **Full (strict)**.
-2. Trzymaj `BUMP_API_KEY` i `SESSION_COOKIE_SECRET` wyłącznie w sekretach hostingu.
-3. Dla `/api/*` ustaw brak cache, dla statyk (`/styles.css`, `/app.js`) możesz włączyć cache.
-4. Ustaw `PUBLIC_BASE_URL` na domenę produkcyjną po HTTPS.
-5. Aplikacja ma:
+1. Ustaw SSL/TLS na **Full (strict)**.
+2. Trzymaj `BUMP_API_KEY` i `SESSION_COOKIE_SECRET` w sekretach hostingu.
+3. Wyłącz cache dla `/api/*`, a dla statyk włącz cache.
+4. Ustaw `PUBLIC_BASE_URL` na domenę HTTPS.
+5. Aplikacja zawiera:
    - `helmet` + CSP,
    - HSTS w produkcji,
-   - cookie sesji panelu `httpOnly`, `signed`, `sameSite=lax`, `secure` (w prod),
-   - walidację linków invite/banner.
+   - cookie sesji panelu: `httpOnly`, `signed`, `sameSite=lax`, `secure` (prod),
+   - walidację invite/banner URL.
 
 ---
 
-## Bezpieczeństwo i dalszy rozwój (recommended)
-- Podmień tokenowy panel na logowanie przez Discord OAuth2 i weryfikację ról admin/owner.
-- Dodaj rate limiting dla `/api/bump` i `/api/panel/session`.
-- Dodaj moderację reklam (status pending/approved).
-- Dodaj cooldown bumpów (np. co 2h na serwer).
+## Dalszy rozwój (opcjonalnie)
+- Discord OAuth2 (weryfikacja owner/admin zamiast token flow).
+- Rate limiting dla `/api/bump` i `/api/panel/session`.
+- Moderacja reklam (pending/approved).
+- Cooldown bumpów (np. co 2h na serwer).
