@@ -29,6 +29,14 @@ db.exec(`
     bumped_at TEXT NOT NULL,
     FOREIGN KEY(guild_id) REFERENCES servers(guild_id)
   );
+
+  CREATE TABLE IF NOT EXISTS panel_sessions (
+    session_id TEXT PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(guild_id) REFERENCES servers(guild_id)
+  );
 `);
 
 const upsertServerStmt = db.prepare(`
@@ -55,6 +63,20 @@ const insertBumpLogStmt = db.prepare(`
   INSERT INTO bump_logs (guild_id, bumped_at)
   VALUES (?, ?)
 `);
+
+const createPanelSessionStmt = db.prepare(`
+  INSERT INTO panel_sessions (session_id, guild_id, expires_at, created_at)
+  VALUES (?, ?, ?, ?)
+`);
+
+const getPanelSessionStmt = db.prepare(`
+  SELECT ps.session_id, ps.guild_id, ps.expires_at
+  FROM panel_sessions ps
+  WHERE ps.session_id = ?
+`);
+
+const deletePanelSessionStmt = db.prepare('DELETE FROM panel_sessions WHERE session_id = ?');
+const purgeExpiredSessionsStmt = db.prepare('DELETE FROM panel_sessions WHERE datetime(expires_at) <= datetime(?)');
 
 const createServerFromBump = ({ guildId, guildName, inviteUrl }) => {
   const now = new Date().toISOString();
@@ -88,14 +110,11 @@ const listServers = () => {
 };
 
 const getServerByToken = (guildId, panelToken) => {
-  return db.prepare(`
-    SELECT * FROM servers WHERE guild_id = ? AND panel_token = ?
-  `).get(guildId, panelToken);
+  return db.prepare('SELECT * FROM servers WHERE guild_id = ? AND panel_token = ?').get(guildId, panelToken);
 };
 
-const updateServerSettings = ({ guildId, panelToken, description, adTitle, adBody, inviteUrl, bannerUrl }) => {
+const updateServerSettings = ({ guildId, description, adTitle, adBody, inviteUrl, bannerUrl }) => {
   const now = new Date().toISOString();
-
   const result = db.prepare(`
     UPDATE servers
     SET description = @description,
@@ -104,15 +123,40 @@ const updateServerSettings = ({ guildId, panelToken, description, adTitle, adBod
         invite_url = @inviteUrl,
         banner_url = @bannerUrl,
         updated_at = @updatedAt
-    WHERE guild_id = @guildId AND panel_token = @panelToken
-  `).run({ guildId, panelToken, description, adTitle, adBody, inviteUrl, bannerUrl, updatedAt: now });
+    WHERE guild_id = @guildId
+  `).run({ guildId, description, adTitle, adBody, inviteUrl, bannerUrl, updatedAt: now });
 
   return result.changes > 0;
+};
+
+const createPanelSession = (guildId, ttlHours = 24) => {
+  const now = new Date();
+  const expires = new Date(now.getTime() + ttlHours * 60 * 60 * 1000);
+  const sessionId = nanoid(48);
+
+  purgeExpiredSessionsStmt.run(now.toISOString());
+  createPanelSessionStmt.run(sessionId, guildId, expires.toISOString(), now.toISOString());
+
+  return { sessionId, expiresAt: expires.toISOString() };
+};
+
+const getValidPanelSession = (sessionId) => {
+  const row = getPanelSessionStmt.get(sessionId);
+  if (!row) return null;
+
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    deletePanelSessionStmt.run(sessionId);
+    return null;
+  }
+
+  return row;
 };
 
 module.exports = {
   createServerFromBump,
   listServers,
   getServerByToken,
-  updateServerSettings
+  updateServerSettings,
+  createPanelSession,
+  getValidPanelSession
 };

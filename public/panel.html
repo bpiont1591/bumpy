@@ -4,37 +4,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GuildLift Panel</title>
+  <meta name="description" content="Panel konfiguracji reklamy i ustawień serwera GuildLift." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <main class="container panel-wrap">
     <h1>Panel serwera</h1>
-    <p id="panel-status">Ładowanie danych...</p>
+    <p id="panel-status" class="panel-status">Ładowanie danych...</p>
 
     <form id="panel-form" class="panel-form hidden">
       <label>
         Opis serwera
-        <textarea name="description" rows="4"></textarea>
+        <textarea name="description" rows="4" maxlength="700" placeholder="Opisz klimat, tematykę i społeczność serwera"></textarea>
       </label>
 
       <label>
         Tytuł reklamy
-        <input name="adTitle" type="text" maxlength="120" />
+        <input name="adTitle" type="text" maxlength="120" placeholder="Np. Szukasz aktywnej społeczności gamingowej?" />
       </label>
 
       <label>
         Treść reklamy
-        <textarea name="adBody" rows="5"></textarea>
+        <textarea name="adBody" rows="5" maxlength="900" placeholder="Krótki przekaz promocyjny z wyróżnikami serwera"></textarea>
       </label>
 
       <label>
         Link zaproszenia
-        <input name="inviteUrl" type="url" required />
+        <input name="inviteUrl" type="url" required placeholder="https://discord.gg/..." />
       </label>
 
       <label>
         Link do bannera
-        <input name="bannerUrl" type="url" />
+        <input name="bannerUrl" type="url" placeholder="https://..." />
       </label>
 
       <button class="btn" type="submit">Zapisz zmiany</button>

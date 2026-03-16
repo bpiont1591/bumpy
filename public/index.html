@@ -3,24 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GuildLift - bump Twojego serwera</title>
+  <title>GuildLift - Profesjonalny bump serwerów Discord</title>
+  <meta name="description" content="GuildLift to nowoczesna platforma do promowania serwerów Discord komendą /bump." />
+  <meta property="og:title" content="GuildLift" />
+  <meta property="og:description" content="Promuj serwer Discord komendą /bump i zarządzaj reklamą w panelu." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>GuildLift</h1>
-    <p>Lista serwerów Discord bumpowanych przez komendę <code>/bump</code></p>
+    <div class="topbar__inner">
+      <h1>GuildLift</h1>
+      <p>Nowoczesny listing serwerów Discord bumpowanych przez <code>/bump</code></p>
+    </div>
   </header>
 
   <main class="container">
     <section class="hero">
-      <h2>Promuj serwer bez botów użytkowników</h2>
-      <p>Dodaj naszego bota na swój serwer, wpisz <code>/bump</code> i automatycznie wskocz na górę listy.</p>
+      <span class="hero__badge">Cloudflare ready</span>
+      <h2>Zwiększ widoczność swojego serwera</h2>
+      <p>Dodaj naszego bota, użyj <code>/bump</code> i automatycznie przesuń serwer na górę listy. Bez obcych botów, tylko Twoja społeczność.</p>
       <a class="btn" href="#servers">Przeglądaj serwery</a>
     </section>
 
-    <section id="servers">
-      <h3>Aktywne serwery</h3>
+    <section id="servers" class="servers-section">
+      <div class="section-head">
+        <h3>Aktywne serwery</h3>
+        <p>Sortowanie według ostatniego bumpa</p>
+      </div>
       <div id="server-list" class="server-list"></div>
     </section>
   </main>
