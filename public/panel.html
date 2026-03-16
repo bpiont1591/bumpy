@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuildLift Panel</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container panel-wrap">
+    <h1>Panel serwera</h1>
+    <p id="panel-status">Ładowanie danych...</p>
+
+    <form id="panel-form" class="panel-form hidden">
+      <label>
+        Opis serwera
+        <textarea name="description" rows="4"></textarea>
+      </label>
+
+      <label>
+        Tytuł reklamy
+        <input name="adTitle" type="text" maxlength="120" />
+      </label>
+
+      <label>
+        Treść reklamy
+        <textarea name="adBody" rows="5"></textarea>
+      </label>
+
+      <label>
+        Link zaproszenia
+        <input name="inviteUrl" type="url" required />
+      </label>
+
+      <label>
+        Link do bannera
+        <input name="bannerUrl" type="url" />
+      </label>
+
+      <button class="btn" type="submit">Zapisz zmiany</button>
+    </form>
+  </main>
+
+  <script src="/panel.js"></script>
+</body>
+</html>

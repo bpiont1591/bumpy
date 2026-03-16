@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GuildLift - bump Twojego serwera</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>GuildLift</h1>
+    <p>Lista serwerów Discord bumpowanych przez komendę <code>/bump</code></p>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h2>Promuj serwer bez botów użytkowników</h2>
+      <p>Dodaj naszego bota na swój serwer, wpisz <code>/bump</code> i automatycznie wskocz na górę listy.</p>
+      <a class="btn" href="#servers">Przeglądaj serwery</a>
+    </section>
+
+    <section id="servers">
+      <h3>Aktywne serwery</h3>
+      <div id="server-list" class="server-list"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
