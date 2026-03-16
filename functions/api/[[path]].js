@@ -170,7 +170,11 @@ export async function onRequest(context) {
         updated_at = excluded.updated_at
     `).bind(guildId, guildName, panelToken, channelId, now, now).run();
 
-    return json({ success: true });
+    const base = env.PUBLIC_BASE_URL || `${url.protocol}//${url.host}`;
+    return json({
+      success: true,
+      panelUrl: `${base}/panel.html#guild=${guildId}&token=${panelToken}`
+    });
   }
 
   if (path === '/api/bump' && method === 'POST') {

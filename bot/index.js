@@ -62,7 +62,7 @@ async function apiPost(path, payload) {
 
   if (!response.ok) {
     const apiMessage = data.error || data.message;
-    const fallback = raw ? raw.slice(0, 240) : `Błąd API (${response.status})`;
+    const fallback = raw ? raw.slice(0, 240) : 'Wewnętrzny błąd API.';
 
     if (response.status >= 500) {
       throw new Error(
@@ -70,7 +70,7 @@ async function apiPost(path, payload) {
       );
     }
 
-    throw new Error(apiMessage || fallback || `Błąd API (${response.status})`);
+    throw new Error(apiMessage || fallback || 'Błąd API.');
   }
 
   return data;
@@ -93,7 +93,7 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      await apiPost('/api/guild-config', {
+      const cfg = await apiPost('/api/guild-config', {
         guildId: interaction.guildId,
         guildName: interaction.guild?.name || 'Nieznany serwer',
         channelId: channel.id
@@ -101,7 +101,8 @@ client.on('interactionCreate', async (interaction) => {
 
       await interaction.editReply(
         `✅ Kanał bumpa ustawiony na ${channel}.\n` +
-        'Od teraz `/bump` działa tylko tam i bot automatycznie tworzy link zaproszenia z tego kanału.'
+        'Od teraz `/bump` działa tylko tam i bot automatycznie tworzy link zaproszenia z tego kanału.\n' +
+        `Panel serwera: ${cfg.panelUrl}`
       );
     } catch (error) {
       await interaction.editReply(`❌ Błąd: ${error.message}`);

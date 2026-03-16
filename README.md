@@ -13,9 +13,8 @@ Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera
 
 ## Flow działania bota
 1. Użytkownik klika **Zaproś bota na serwer** (strona otwiera onboarding panelu).
-2. Admin używa `/invite kanał:#nazwa-kanału`.
-3. Następnie używa `/bump` na tym kanale.
-4. Bot zwraca link do panelu serwera.
+2. Admin używa `/invite kanał:#nazwa-kanału` i od razu dostaje link do panelu serwera.
+3. Następnie używa `/bump` na tym kanale, aby wypromować serwer na stronie.
 
 ---
 
@@ -85,6 +84,9 @@ Jeśli bot zwraca ten błąd:
 1. Sprawdź `wrangler.toml` czy ma poprawny `database_id`.
 2. Upewnij się, że binding ma nazwę `DB`.
 3. Zrób redeploy Pages.
+
+## Rozwiązanie błędu: "❌ Błąd API"
+Bot nie pokazuje już surowego `Błąd API (500)` — zamiast tego dostajesz bardziej konkretny opis i podpowiedź diagnostyczną.
 
 ## Rozwiązanie błędu: "❌ Błąd: Błąd API (500)"
 Najczęstsze przyczyny i naprawa:
