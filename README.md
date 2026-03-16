@@ -6,27 +6,23 @@ Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera
 - Strona główna z listą serwerów bumpowanych komendą `/bump`.
 - Tylko serwery dodane przez Twojego bota (bez obcych integracji listingowych).
 - Osobny bot Discord (`/bot`) do hostowania na innym serwerze.
-- Panel serwera z bezpieczną sesją HTTP-only, gdzie admin ustawia:
-  - opis,
-  - reklamę (tytuł + treść),
-  - link invite,
-  - banner.
+- Panel serwera z bezpieczną sesją HTTP-only, gdzie admin ustawia opis/reklamę/link/banner.
+- Przycisk **Zaproś bota na serwer** zaciągany z sekretu `BOT_CLIENT_ID` (bez hardcodu w JS).
 
 ---
 
 ## Flow działania bota
-1. **Zaproś bota** przyciskiem na stronie (podmień `YOUR_CLIENT_ID` w `app.js`).
-2. Na serwerze użyj `/invite kanał:#nazwa-kanału` (tylko admin).
-3. Od tego momentu `/bump invite:<link>` działa wyłącznie na skonfigurowanym kanale.
+1. Użytkownik klika **Zaproś bota na serwer**.
+2. Admin używa `/invite kanał:#nazwa-kanału`.
+3. `/bump invite:<link>` działa tylko na tym kanale.
 
 ---
 
 ## Architektura
-- `index.html`, `panel.html`, `styles.css`, `app.js`, `panel.js` — frontend trzymany w głównym katalogu projektu.
-- `functions/api/[[path]].js` — API pod Cloudflare Pages Functions.
+- `index.html`, `panel.html`, `styles.css`, `app.js`, `panel.js` — frontend w głównym katalogu.
+- `functions/api/[[path]].js` — API Cloudflare Pages Functions.
 - `migrations/001_init.sql` — schema D1.
-- `bot/index.js` — bot Discord z komendami `/invite` i `/bump`.
-- `src/*` — lokalny backend Node (opcjonalnie do local dev).
+- `bot/index.js` — komendy `/invite` i `/bump`.
 
 ---
 
@@ -36,20 +32,21 @@ Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera
 wrangler d1 create bumpyv2-db
 ```
 
-### 2) Podepnij D1 do projektu Pages
-Cloudflare Dashboard -> **Pages -> bumpyv2 -> Settings -> Functions -> D1 bindings**
-- Binding name: `DB`
-- Database: `bumpyv2-db`
+### 2) Uzupełnij `wrangler.toml`
+Bindingi są zarządzane przez plik, więc podmień:
+- `database_id = "PODMIEN_NA_REAL_DATABASE_ID"`
+na realne ID z poprzedniego kroku.
 
 ### 3) Uruchom migrację
 ```bash
 npm run cf:d1:migrate
 ```
 
-### 4) Ustaw sekrety w Cloudflare
-Pages -> Settings -> Environment Variables:
+### 4) Ustaw sekrety w Cloudflare Pages
+Pages -> Settings -> Environment Variables (Production/Preview):
 - `BUMP_API_KEY` (secret)
 - `PUBLIC_BASE_URL=https://bumpyv2.pages.dev`
+- `BOT_CLIENT_ID=<application_id_bota_discord>`
 
 ### 5) Deploy
 ```bash
@@ -66,7 +63,7 @@ cp .env.example .env
 npm start
 ```
 
-Przykładowy `.env` dla bota:
+Przykładowy `.env`:
 ```env
 BOT_TOKEN=twoj_token_bota
 CLIENT_ID=application_id
@@ -77,18 +74,15 @@ BUMP_API_KEY=ten_sam_klucz_co_w_cloudflare_secret
 ---
 
 ## Rozwiązanie błędu: "Brak bindowania DB (D1)"
-Jeśli bot zwraca ten błąd, to znaczy że projekt Pages nie ma podpiętego D1 bindingu `DB`.
-
-Sprawdź:
-1. Pages -> bumpyv2 -> Settings -> Functions -> D1 bindings.
-2. Czy binding nazywa się dokładnie `DB`.
-3. Czy wskazuje bazę `bumpyv2-db`.
-4. Po zmianie zrób redeploy.
+Jeśli bot zwraca ten błąd:
+1. Sprawdź `wrangler.toml` czy ma poprawny `database_id`.
+2. Upewnij się, że binding ma nazwę `DB`.
+3. Zrób redeploy Pages.
 
 ---
 
 ## Security
 - API do bumpa chronione `x-bump-api-key`.
-- Sesje panelu trzymane w D1 + cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
+- Sesje panelu: `HttpOnly`, `Secure`, `SameSite=Lax`.
 - Walidacja invite URL i banner URL.
 - Endpointy API mają `cache-control: no-store`.

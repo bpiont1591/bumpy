@@ -1,5 +1,3 @@
-const BOT_CLIENT_ID = 'YOUR_CLIENT_ID';
-
 function escapeHtml(value) {
   if (typeof value !== 'string') return '';
   return value
@@ -26,8 +24,13 @@ async function checkSetupStatus() {
 
     if (!data.hasDbBinding) {
       statusNode.classList.remove('hidden');
-      statusNode.innerHTML = '⚠️ Brakuje D1 bindingu. Ustaw w Cloudflare Pages: Functions → D1 bindings (`DB`).';
+      statusNode.innerHTML = '⚠️ Brakuje D1 bindingu `DB` w `wrangler.toml` lub na środowisku.';
       return;
+    }
+
+    if (!data.hasBotClientId) {
+      statusNode.classList.remove('hidden');
+      statusNode.innerHTML = '⚠️ Brakuje sekretu `BOT_CLIENT_ID` dla przycisku zaproszenia bota.';
     }
   } catch (_error) {
     statusNode.classList.remove('hidden');
@@ -35,15 +38,27 @@ async function checkSetupStatus() {
   }
 }
 
-function initInviteButton() {
+async function initInviteButton() {
   const inviteBtn = document.getElementById('invite-bot-btn');
   if (!inviteBtn) return;
 
-  if (BOT_CLIENT_ID === 'YOUR_CLIENT_ID') {
-    inviteBtn.title = 'Podmień YOUR_CLIENT_ID w app.js na ID aplikacji Discord bota.';
-  }
+  try {
+    const res = await fetch('/api/public-config');
+    const data = await res.json();
 
-  inviteBtn.href = `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(BOT_CLIENT_ID)}&scope=bot%20applications.commands&permissions=268435456`;
+    if (!res.ok) {
+      inviteBtn.title = data.error || 'Brak konfiguracji zaproszenia bota.';
+      inviteBtn.classList.add('btn--disabled');
+      inviteBtn.removeAttribute('href');
+      return;
+    }
+
+    inviteBtn.href = data.inviteUrl;
+  } catch (_error) {
+    inviteBtn.title = 'Nie udało się pobrać konfiguracji zaproszenia bota.';
+    inviteBtn.classList.add('btn--disabled');
+    inviteBtn.removeAttribute('href');
+  }
 }
 
 async function loadServers() {

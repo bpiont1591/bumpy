@@ -216,6 +216,12 @@ h1, h2, h3, h4, h5 { font-family: 'Space Grotesk', system-ui, sans-serif; }
   box-shadow: none;
 }
 
+.btn--disabled {
+  opacity: .6;
+  pointer-events: none;
+  filter: grayscale(.35);
+}
+
 .empty {
   padding: 1rem;
   border: 1px dashed var(--stroke);

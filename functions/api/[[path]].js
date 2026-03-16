@@ -98,13 +98,25 @@ export async function onRequest(context) {
     return json({
       ok: true,
       provider: 'cloudflare-pages-functions',
-      hasDbBinding: Boolean(env.DB)
+      hasDbBinding: Boolean(env.DB),
+      hasBotClientId: Boolean(env.BOT_CLIENT_ID)
+    });
+  }
+
+  if (path === '/api/public-config' && method === 'GET') {
+    if (!env.BOT_CLIENT_ID) {
+      return json({ error: 'Brak BOT_CLIENT_ID w sekretach środowiska.' }, 500);
+    }
+
+    return json({
+      botClientId: env.BOT_CLIENT_ID,
+      inviteUrl: `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(env.BOT_CLIENT_ID)}&scope=bot%20applications.commands&permissions=268435456`
     });
   }
 
   if (!env.DB) {
     return json({
-      error: 'Brak bindowania DB (D1). Ustaw Pages -> Settings -> Functions -> D1 bindings: DB -> bumpyv2-db.'
+      error: 'Brak bindowania DB (D1). Przy zarządzaniu przez wrangler.toml ustaw [[d1_databases]] binding=DB z poprawnym database_id i zrób redeploy.'
     }, 500);
   }
 
