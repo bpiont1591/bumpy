@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NebulaNest - katalog serwerów Discord</title>
+  <meta name="description" content="NebulaNest to nowoczesny katalog serwerów Discord z bumpowaniem przez /bump." />
+  <meta property="og:title" content="NebulaNest" />
+  <meta property="og:description" content="Promuj serwer Discord przez /bump i zarządzaj reklamą w panelu." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg-glow bg-glow--one"></div>
+  <div class="bg-glow bg-glow--two"></div>
+
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/">
+        <span class="brand__logo">✦</span>
+        <span>NebulaNest</span>
+      </a>
+      <a class="btn btn--ghost" href="#servers">Przeglądaj serwery</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">KATALOG SPOŁECZNOŚCI DISCORD</p>
+        <h1>Wynieś swój serwer wyżej niż kiedykolwiek.</h1>
+        <p class="hero__text">
+          NebulaNest działa podobnie do top-list serwerów: dodajesz bota, używasz <code>/bump</code> i Twoja społeczność wskakuje na górę.
+          Zero przypadkowych integracji, pełna kontrola panelu i profesjonalna prezentacja.
+        </p>
+        <div class="hero__cta">
+          <a class="btn" id="invite-bot-btn" target="_blank" rel="noreferrer" href="#">Zaproś bota na serwer</a>
+          <a class="btn btn--ghost" href="#servers">Odkryj serwery</a>
+          <a class="btn btn--ghost" href="/panel.html">Panel serwera</a>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <h2>Jak to działa?</h2>
+        <ol>
+          <li>Dodaj bota NebulaNest na serwer.</li>
+          <li>Wpisz <code>/bump invite:&lt;link&gt;</code>.</li>
+          <li>Skonfiguruj reklamę i banner w panelu.</li>
+        </ol>
+        <p class="hero-card__tip">Hosting gotowy pod Cloudflare + bezpieczne sesje panelu.</p>
+      </aside>
+    </section>
+
+    <section class="listing-head" id="servers">
+      <div id="setup-status" class="empty hidden"></div>
+      <div>
+        <p class="eyebrow">AKTYWNA LISTA</p>
+        <h2>Serwery bumpowane najnowszą aktywnością</h2>
+      </div>
+    </section>
+
+    <section id="server-list" class="server-list" aria-live="polite"></section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
