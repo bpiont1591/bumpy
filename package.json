@@ -1,0 +1,26 @@
+{
+  "name": "serwerownia-bump",
+  "version": "1.0.0",
+  "description": "Platforma do promowania serwerów Discord przez komendę /bump.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js",
+    "cf:dev": "wrangler pages dev . --compatibility-date=2026-03-16",
+    "cf:deploy": "wrangler pages deploy . --project-name bumpyv2",
+    "cf:d1:migrate": "wrangler d1 execute bumpyv2-db --file=./migrations/001_init.sql"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "nanoid": "^5.0.9"
+  },
+  "devDependencies": {
+    "wrangler": "^4.6.0"
+  }
+}
