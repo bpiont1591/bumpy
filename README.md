@@ -33,9 +33,15 @@ Projekt jest przygotowany pod:
 ```bash
 wrangler d1 create bumpyv2-db
 ```
-Skopiuj `database_id` do `wrangler.toml`.
 
-### 2) Uruchom migrację
+### 2) Podepnij D1 do projektu Pages (Dashboard)
+Cloudflare Dashboard -> **Pages -> bumpyv2 -> Settings -> Functions -> D1 bindings**
+- Binding name: `DB`
+- Database: `bumpyv2-db`
+
+> Dzięki temu nie trzeba trzymać UUID bazy w `wrangler.toml` (unikasz błędu 8000022).
+
+### 3) Uruchom migrację
 ```bash
 npm run cf:d1:migrate
 ```
@@ -44,11 +50,11 @@ Lub ręcznie:
 wrangler d1 execute bumpyv2-db --file=./migrations/001_init.sql
 ```
 
-### 3) Ustaw sekrety w Cloudflare (Pages Project -> Settings -> Environment Variables)
+### 4) Ustaw sekrety w Cloudflare (Pages Project -> Settings -> Environment Variables)
 - `BUMP_API_KEY` (secret)
 - `PUBLIC_BASE_URL=https://bumpyv2.pages.dev`
 
-### 4) Deploy na Pages
+### 5) Deploy na Pages
 ```bash
 npm run cf:deploy
 ```
