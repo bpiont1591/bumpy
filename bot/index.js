@@ -1,5 +1,13 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
+const {
+  Client,
+  GatewayIntentBits,
+  SlashCommandBuilder,
+  REST,
+  Routes,
+  PermissionFlagsBits,
+  ChannelType
+} = require('discord.js');
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -14,18 +22,47 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands = [
   new SlashCommandBuilder()
+    .setName('invite')
+    .setDescription('Ustaw kanał, na którym będzie dozwolona komenda /bump')
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+    .addChannelOption((opt) =>
+      opt
+        .setName('kanał')
+        .setDescription('Kanał do bumpowania')
+        .addChannelTypes(ChannelType.GuildText)
+        .setRequired(true)
+    ),
+  new SlashCommandBuilder()
     .setName('bump')
     .setDescription('Wypromuj serwer na stronie NebulaNest')
-    .addStringOption(opt =>
+    .addStringOption((opt) =>
       opt.setName('invite')
         .setDescription('Link zaproszenia Discord')
         .setRequired(true)
     )
-].map(cmd => cmd.toJSON());
+].map((cmd) => cmd.toJSON());
 
 async function registerCommands() {
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
   await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+}
+
+async function apiPost(path, payload) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-bump-api-key': BUMP_API_KEY
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || `Błąd API (${response.status})`);
+  }
+
+  return data;
 }
 
 client.on('ready', () => {
@@ -33,35 +70,50 @@ client.on('ready', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand() || interaction.commandName !== 'bump') return;
+  if (!interaction.isChatInputCommand()) return;
 
-  const inviteUrl = interaction.options.getString('invite', true);
-  await interaction.deferReply({ ephemeral: true });
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/bump`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-bump-api-key': BUMP_API_KEY
-      },
-      body: JSON.stringify({
-        guildId: interaction.guildId,
-        guildName: interaction.guild?.name || 'Nieznany serwer',
-        inviteUrl
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'Nie udało się wykonać bumpa.');
+  if (interaction.commandName === 'invite') {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageGuild)) {
+      await interaction.reply({ content: '❌ Tylko admin serwera może użyć tej komendy.', ephemeral: true });
+      return;
     }
 
-    await interaction.editReply(
-      `✅ Bump wykonany! Twój serwer został odświeżony na liście.\nPanel: ${data.panelUrl}`
-    );
-  } catch (error) {
-    await interaction.editReply(`❌ Błąd: ${error.message}`);
+    const channel = interaction.options.getChannel('kanał', true);
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      await apiPost('/api/guild-config', {
+        guildId: interaction.guildId,
+        guildName: interaction.guild?.name || 'Nieznany serwer',
+        channelId: channel.id
+      });
+
+      await interaction.editReply(`✅ Kanał bumpa ustawiony na ${channel}. Od teraz /bump działa tylko tam.`);
+    } catch (error) {
+      await interaction.editReply(`❌ Błąd: ${error.message}`);
+    }
+
+    return;
+  }
+
+  if (interaction.commandName === 'bump') {
+    const inviteUrl = interaction.options.getString('invite', true);
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const data = await apiPost('/api/bump', {
+        guildId: interaction.guildId,
+        guildName: interaction.guild?.name || 'Nieznany serwer',
+        channelId: interaction.channelId,
+        inviteUrl
+      });
+
+      await interaction.editReply(
+        `✅ Bump wykonany! Twój serwer został odświeżony na liście.\nPanel: ${data.panelUrl}`
+      );
+    } catch (error) {
+      await interaction.editReply(`❌ Błąd: ${error.message}`);
+    }
   }
 });
 

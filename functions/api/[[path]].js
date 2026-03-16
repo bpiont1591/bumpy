@@ -21,9 +21,7 @@ function randomToken(length = 48) {
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);
   let out = '';
-  for (let i = 0; i < length; i += 1) {
-    out += alphabet[bytes[i] % alphabet.length];
-  }
+  for (let i = 0; i < length; i += 1) out += alphabet[bytes[i] % alphabet.length];
   return out;
 }
 
@@ -61,7 +59,7 @@ function getCookie(request, cookieName) {
 
 async function getServerByGuildId(db, guildId) {
   return db.prepare(`
-    SELECT guild_id, guild_name, invite_url, description, ad_title, ad_body, banner_url, bumps_count, bumped_at, panel_token
+    SELECT guild_id, guild_name, invite_url, description, ad_title, ad_body, banner_url, bumps_count, bumped_at, panel_token, bump_channel_id
     FROM servers WHERE guild_id = ?
   `).bind(guildId).first();
 }
@@ -86,19 +84,31 @@ async function requirePanelSession(request, env, guildId) {
   return row;
 }
 
+async function ensureSchema(db) {
+  await db.prepare("ALTER TABLE servers ADD COLUMN bump_channel_id TEXT DEFAULT ''").run().catch(() => null);
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
   const path = url.pathname;
 
-  if (!env.DB) {
-    return json({ error: 'Brak bindowania DB (D1).' }, 500);
+  if (path === '/api/health' && method === 'GET') {
+    return json({
+      ok: true,
+      provider: 'cloudflare-pages-functions',
+      hasDbBinding: Boolean(env.DB)
+    });
   }
 
-  if (path === '/api/health' && method === 'GET') {
-    return json({ ok: true, provider: 'cloudflare-pages-functions' });
+  if (!env.DB) {
+    return json({
+      error: 'Brak bindowania DB (D1). Ustaw Pages -> Settings -> Functions -> D1 bindings: DB -> bumpyv2-db.'
+    }, 500);
   }
+
+  await ensureSchema(env.DB);
 
   if (path === '/api/servers' && method === 'GET') {
     const { results } = await env.DB.prepare(`
@@ -108,6 +118,39 @@ export async function onRequest(context) {
     `).all();
 
     return json({ servers: results || [] });
+  }
+
+  if (path === '/api/guild-config' && method === 'POST') {
+    const apiKey = request.headers.get('x-bump-api-key');
+    if (!env.BUMP_API_KEY || apiKey !== env.BUMP_API_KEY) {
+      return json({ error: 'Nieprawidłowy klucz API.' }, 401);
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const guildId = sanitizeText(body.guildId, 64);
+    const guildName = sanitizeText(body.guildName, 120);
+    const channelId = sanitizeText(body.channelId, 64);
+
+    if (!guildId || !guildName || !channelId) {
+      return json({ error: 'Wymagane: guildId, guildName, channelId.' }, 400);
+    }
+
+    const now = new Date().toISOString();
+    const existing = await getServerByGuildId(env.DB, guildId);
+    const panelToken = existing?.panel_token || randomToken(24);
+
+    await env.DB.prepare(`
+      INSERT INTO servers (
+        guild_id, guild_name, invite_url, description, ad_title, ad_body, banner_url, panel_token,
+        bump_channel_id, bumps_count, bumped_at, created_at, updated_at
+      ) VALUES (?, ?, 'https://discord.gg/', '', '', '', '', ?, ?, 0, NULL, ?, ?)
+      ON CONFLICT(guild_id) DO UPDATE SET
+        guild_name = excluded.guild_name,
+        bump_channel_id = excluded.bump_channel_id,
+        updated_at = excluded.updated_at
+    `).bind(guildId, guildName, panelToken, channelId, now, now).run();
+
+    return json({ success: true });
   }
 
   if (path === '/api/bump' && method === 'POST') {
@@ -120,31 +163,41 @@ export async function onRequest(context) {
     const guildId = sanitizeText(body.guildId, 64);
     const guildName = sanitizeText(body.guildName, 120);
     const inviteUrl = sanitizeText(body.inviteUrl, 500);
+    const channelId = sanitizeText(body.channelId, 64);
 
-    if (!guildId || !guildName || !inviteUrl) {
-      return json({ error: 'Wymagane: guildId, guildName, inviteUrl.' }, 400);
+    if (!guildId || !guildName || !inviteUrl || !channelId) {
+      return json({ error: 'Wymagane: guildId, guildName, inviteUrl, channelId.' }, 400);
     }
 
     if (!isValidDiscordInvite(inviteUrl)) {
       return json({ error: 'inviteUrl musi być poprawnym linkiem Discord (https).' }, 400);
     }
 
-    const now = new Date().toISOString();
     const existing = await getServerByGuildId(env.DB, guildId);
-    const panelToken = existing?.panel_token || randomToken(24);
+    if (!existing?.bump_channel_id) {
+      return json({ error: 'Najpierw ustaw kanał komendą /invite.' }, 400);
+    }
+
+    if (existing.bump_channel_id !== channelId) {
+      return json({ error: 'Bump można wykonywać tylko na skonfigurowanym kanale /invite.' }, 403);
+    }
+
+    const now = new Date().toISOString();
+    const panelToken = existing.panel_token || randomToken(24);
 
     await env.DB.prepare(`
       INSERT INTO servers (
         guild_id, guild_name, invite_url, description, ad_title, ad_body, banner_url, panel_token,
-        bumps_count, bumped_at, created_at, updated_at
-      ) VALUES (?, ?, ?, '', '', '', '', ?, 1, ?, ?, ?)
+        bump_channel_id, bumps_count, bumped_at, created_at, updated_at
+      ) VALUES (?, ?, ?, '', '', '', '', ?, ?, 1, ?, ?, ?)
       ON CONFLICT(guild_id) DO UPDATE SET
         guild_name=excluded.guild_name,
         invite_url=excluded.invite_url,
+        bump_channel_id=excluded.bump_channel_id,
         bumps_count=servers.bumps_count + 1,
         bumped_at=excluded.bumped_at,
         updated_at=excluded.updated_at
-    `).bind(guildId, guildName, inviteUrl, panelToken, now, now, now).run();
+    `).bind(guildId, guildName, inviteUrl, panelToken, channelId, now, now, now).run();
 
     await env.DB.prepare('INSERT INTO bump_logs (guild_id, bumped_at) VALUES (?, ?)').bind(guildId, now).run();
 

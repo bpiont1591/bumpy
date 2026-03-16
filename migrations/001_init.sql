@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS servers (
   ad_body TEXT DEFAULT '',
   banner_url TEXT DEFAULT '',
   panel_token TEXT NOT NULL,
+  bump_channel_id TEXT DEFAULT '',
   bumps_count INTEGER DEFAULT 0,
   bumped_at TEXT,
   created_at TEXT NOT NULL,
