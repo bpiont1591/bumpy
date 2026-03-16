@@ -14,9 +14,18 @@ Nowoczesna platforma typu "bump listing" dla serwerów Discord (budowana od zera
 
 ---
 
+## Architektura
+- `index.html`, `panel.html`, `styles.css`, `app.js`, `panel.js` — frontend trzymany w **głównym katalogu projektu**.
+- `functions/api/[[path]].js` — API pod Cloudflare Pages Functions.
+- `migrations/001_init.sql` — schema D1.
+- `bot/index.js` — bot Discord z komendą `/bump`.
+- `src/*` — lokalny backend Node (opcjonalnie do local dev).
+
+---
+
 ## Cloudflare Pages (bumpyv2.pages.dev) — gotowe
 Projekt jest przygotowany pod:
-- statyczny frontend w `public/`,
+- statyczny frontend z katalogu głównego repo,
 - API w Cloudflare Pages Functions: `functions/api/[[path]].js`,
 - bazę danych Cloudflare D1 (binding `DB`).
 

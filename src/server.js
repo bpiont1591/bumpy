@@ -63,7 +63,7 @@ app.use((req, res, next) => {
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '50kb' }));
 app.use(cookieParser(SESSION_COOKIE_SECRET));
-app.use(express.static(path.join(process.cwd(), 'public')));
+app.use(express.static(process.cwd()));
 
 function sanitizeText(value, maxLength) {
   if (typeof value !== 'string') return '';
